@@ -10,6 +10,7 @@
 #"BFD (GNU Binutils) 2.22 internal error, aborting at reloc.c line 1509 in _bfd_relocate_contents"
 export BINUTILSVER = 2.27
 
+SDK = $(shell pwd)/../../
 ifeq ($(SDK),)
 $(error Environment variable "$SDK" must be set)
 endif
@@ -20,10 +21,14 @@ DRV_LIBS_DYN = -lopennsadyn
 
 DRV_LIBS = -Wl,--start-group -lopennsa -Wl,--end-group
 
-all: demo_opennsa_init Makefile
+all: demo_opennsa_init vxlan Makefile
 dnx: opennsa_diag_shell_qax
+vxlan: demo_vxlan
 
 demo_opennsa_init: demo_opennsa_init.c version.c config_init_defaults.c $(SDK)/lib/x86-64/libopennsa.a
+	gcc -I$(SDK)/include -I$(SDK)/src/gpl-modules/systems/bde/linux/include -I$(SDK)/src/gpl-modules/include -DBCM_ESW_SUPPORT -DBCM_WARM_BOOT_SUPPORT -DSYS_BE_PIO=0 -DSYS_BE_PACKET=0 -DSYS_BE_OTHER=0 -DLE_HOST=1 -o $@ $^ -L$(SDK)/lib/x86-64 $(DRV_LIBS) -lrt -pthread -lm
+
+demo_vxlan: demo_vxlan.c version.c config_init_defaults.c util.c $(SDK)/lib/x86-64/libopennsa.a
 	gcc -I$(SDK)/include -I$(SDK)/src/gpl-modules/systems/bde/linux/include -I$(SDK)/src/gpl-modules/include -DBCM_ESW_SUPPORT -DBCM_WARM_BOOT_SUPPORT -DSYS_BE_PIO=0 -DSYS_BE_PACKET=0 -DSYS_BE_OTHER=0 -DLE_HOST=1 -o $@ $^ -L$(SDK)/lib/x86-64 $(DRV_LIBS) -lrt -pthread -lm
 
 opennsa_diag_shell_qax: opennsa_diag_shell.c version.c config_init_defaults.c $(SDK)/lib/mips-BCM9XLP2_XMC_A1/libopennsa.a $(SDK)/lib/mips-BCM9XLP2_XMC_A1/libopennsa_diag.a $(SDK)/lib/mips-BCM9XLP2_XMC_A1/libopennsa_cint.a
